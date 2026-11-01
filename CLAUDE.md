@@ -48,10 +48,11 @@ Local database: start Postgres from the sibling repo (`../base-components`, `doc
 - Money-moving endpoints are idempotent (idempotency key).
 
 ## Working a ticket
+Run `/ticket VPAY-<n>` (defined in `.claude/commands/ticket.md`) to do steps 1-4 automatically; steps 5-7 follow the owner's chat messages.
 1. Read the Jira ticket and its acceptance criteria; move it to **In Progress**.
 2. Branch from an up-to-date `develop` using the naming above.
 3. Implement with tests; run `mvn verify` and fix failures before pushing. If it cannot be made green, stop and report why.
 4. Push, open a PR into `develop`, move the ticket to **In Review**. Stop and wait for the owner.
 5. If the owner comments: fix it on the same branch, push, reply on the thread, and ask for approval again. An earlier approval does not cover new changes.
-6. On explicit approval from the owner, with CI green (once CI exists) and no unresolved comments: squash-merge, delete the branch, update local `develop`, move the ticket to **Done** and add a comment linking the PR. Never merge on silence.
+6. On explicit approval from the owner, with the `build-and-test` check green and no unresolved comments: squash-merge, delete the branch, update local `develop`, move the ticket to **Done** and add a comment linking the PR. Never merge on silence.
 7. Merges into `release/*` or `main` happen only when the owner explicitly asks for that merge.
