@@ -1,0 +1,35 @@
+wallet:
+  db:
+    schema: ${DB_SCHEMA:wallet}   # single source of truth for the schema name
+
+spring:
+  application:
+    name: wallet-service
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/wallet-service}
+    username: ${DB_USER:postgres}
+    password: ${DB_PASSWORD:password}
+    hikari:
+      schema: ${wallet.db.schema}   # search_path for every connection, so queries never fall back to public
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate   # schema is owned by Flyway, never by Hibernate
+    properties:
+      hibernate:
+        default_schema: ${wallet.db.schema}
+  flyway:
+    enabled: true
+    schemas: ${wallet.db.schema}
+    default-schema: ${wallet.db.schema}   # also holds flyway_schema_history
+    create-schemas: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
