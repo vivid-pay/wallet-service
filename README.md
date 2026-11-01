@@ -1,5 +1,7 @@
 # wallet-service
 
+[![CI](https://github.com/vivid-pay/wallet-service/actions/workflows/ci.yml/badge.svg?branch=develop)](https://github.com/vivid-pay/wallet-service/actions/workflows/ci.yml)
+
 A digital wallet built with production standards as a learning project.
 Java 21, Spring Boot 3, PostgreSQL, Maven.
 
