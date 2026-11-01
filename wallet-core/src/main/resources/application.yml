@@ -33,3 +33,7 @@ management:
     health:
       probes:
         enabled: true
+
+logging:
+  pattern:
+    level: "%5p [%X{correlationId:-}]"   # request correlation ID on every log line
