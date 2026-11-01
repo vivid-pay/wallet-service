@@ -37,6 +37,11 @@ Notifications, statements (PDF/CSV), FX conversion, payment requests, scheduled 
 - **Auditability** – any balance can be explained from the ledger.
 - **Observability** – requests traceable by ID across services.
 
+## Decisions made
+- Balance model and top-up/fee bookkeeping: entries are the truth, stored balance is a
+  cached projection, system accounts are the counterparty ([ADR-0002](adr/0002-ledger-and-balance-model.md)).
+- Money representation: integer minor units plus an ISO 4217 code ([ADR-0003](adr/0003-money-representation.md)).
+
 ## Open questions
-- Stored balance column vs computed from ledger entries? (decide in ADR-002)
-- Which currencies, and how are amounts represented (minor units as `long`)?
+- Which currencies are supported at launch? (a configured list; decided in the "create a wallet" story)
+- Which module owns which table (`ledger` vs `accounts`)? (decided in the wallet data-model story)
