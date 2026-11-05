@@ -71,9 +71,18 @@ Example (Alice tops up 100, then sends 30 to Bob):
 - Entry immutability must be enforced in the database as well (no `UPDATE`/`DELETE` for the
   application role), not only by convention.
 
-## Open follow-ups (decided in VPAY-17, the data-model story)
-- Which module owns which table. A likely split: `ledger` owns ledger accounts and
-  entries (including the balance), and `accounts` owns the wallet profile (owner,
-  status) and refers to its ledger account by id, with no cross-module foreign key.
-- Whether the "sums to zero" rule is also enforced by a deferred database constraint
-  or only by the service plus reconciliation.
+## Follow-ups (decided in VPAY-17, the data-model story)
+- **Table ownership.** `ledger` owns `ledger_account` and `ledger_entry` (including the
+  balance). `accounts` owns `wallet_profile` (owner, status). A wallet profile's primary key
+  `ledger_account_id` refers to its ledger account by id only; there is no cross-module foreign
+  key, and `accounts` creates the account through the `ledger` public API. The profile repeats
+  the currency so `(owner_id, currency)` can be unique; keeping it equal to the account's
+  currency is the creating service's job, since the database cannot check across modules.
+- **Sums to zero.** Enforced by the ledger service and the reconciliation job only, not by a
+  deferred database constraint (simpler and cheaper on every write). Revisit if reconciliation
+  ever finds a mismatch.
+- **Entry immutability.** A `BEFORE UPDATE OR DELETE` row trigger and a `BEFORE TRUNCATE`
+  trigger on `ledger_entry` reject changes for every database role. No separate application
+  role is needed for this, and it still holds if the app connects as a privileged user.
+- **System accounts.** `system` accounts carry a `code` (unique per currency) and are seeded for
+  `EXTERNAL_FUNDING` and `FEES` in USD, EUR and LKR. Adding a currency is a new migration.
