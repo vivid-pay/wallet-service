@@ -3,6 +3,8 @@
 Vivid Pay wallet service: wallets, double-entry ledger, transfers. Java 21, Spring Boot 3.5, PostgreSQL, Flyway, Maven.
 Work is tracked in Jira project **VPAY** (https://sithumkaushitha.atlassian.net). Code is in the GitHub org `vivid-pay`.
 
+**Product context lives in the `platform` repo** (`../platform`, https://github.com/vivid-pay/platform): `VISION.md` (why), `ROADMAP.md` (order and phases), and the product-owner agent. Read them when a ticket needs the bigger picture; backlog planning happens there, ticket implementation happens here.
+
 ## Build and test
 ```bash
 mvn verify                          # full build + all tests (needs Docker running: Testcontainers)
