@@ -15,7 +15,7 @@ import org.hibernate.type.SqlTypes;
 @Entity
 @Immutable
 @Table(name = "ledger_entry")
-public class LedgerEntry {
+public class LedgerEntryEntity {
 
     @Id
     private UUID id;
@@ -37,10 +37,10 @@ public class LedgerEntry {
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
-    protected LedgerEntry() {
+    protected LedgerEntryEntity() {
     }
 
-    public LedgerEntry(UUID transactionId, UUID accountId, Money amount) {
+    public LedgerEntryEntity(UUID transactionId, UUID accountId, Money amount) {
         if (amount.amount() == 0) {
             throw new IllegalArgumentException("entry amount must be non-zero");
         }

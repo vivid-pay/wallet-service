@@ -18,7 +18,7 @@ import org.hibernate.type.SqlTypes;
  */
 @Entity
 @Table(name = "wallet_profile")
-public class WalletProfile {
+public class WalletProfileEntity {
 
     @Id
     @Column(name = "ledger_account_id")
@@ -44,10 +44,10 @@ public class WalletProfile {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
-    protected WalletProfile() {
+    protected WalletProfileEntity() {
     }
 
-    public WalletProfile(UUID ledgerAccountId, UUID ownerId, String currency) {
+    public WalletProfileEntity(UUID ledgerAccountId, UUID ownerId, String currency) {
         this.ledgerAccountId = ledgerAccountId;
         this.ownerId = ownerId;
         this.currency = currency;
