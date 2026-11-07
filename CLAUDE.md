@@ -20,7 +20,7 @@ Local database: start Postgres from the sibling repo (`../base-components`, `doc
 - Group the base package by feature, not by layer (no `dto/`, `model/` or `service/` there). Add role-based sub-packages only inside `internal`, and only once it grows past roughly 10-15 classes.
 - **Naming:** JPA entities end in `Entity` (`LedgerAccountEntity`). DTOs end in `Dto`, both public-facing request/response types and internal ones. Value objects such as `Money` are not DTOs and keep their plain name.
 - All tables live in the `wallet` schema (`wallet.db.schema`). Flyway owns the schema; Hibernate only validates.
-- `docs/requirements.md` holds requirements; `docs/adr/` holds decisions (copy `0000-template.md`).
+- Docs: see `docs/README.md`. **Requirements and system-wide ADRs** (affecting more than one service) live in the `platform` repo (`docs/requirements.md`, `docs/adr/`); **service-specific ADRs** live in `docs/adr/` here. ADR numbers are one global sequence: the next number is the highest in `platform/docs/adr/README.md` plus one, and that index is updated in the same piece of work. Copy `platform/docs/adr/0000-template.md`.
 
 ## Branching
 - `develop` is the integration branch and default. **All work merges to `develop` through a PR.** Never push to `develop`, `main` or `release/*`.
