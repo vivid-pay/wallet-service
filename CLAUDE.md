@@ -16,6 +16,9 @@ Local database: start Postgres from the sibling repo (`../base-components`, `doc
 ## Layout
 - `wallet-core/` is the only Maven module and the deployable. Its packages under `com.sithum.wallet` are Spring Modulith modules: `accounts`, `ledger`, `transfers`, `events`.
 - Modules talk through their public API only. No module reads another module's tables. `ModularityTests` fails the build on a violation.
+- **Inside a module, the base package is the public API and nothing else:** the interface other modules call, domain exceptions and shared value types (e.g. `Money`). Everything else goes in the module's `internal` sub-package: implementations, repositories, JPA entities and enums, and later controllers and DTOs. Keep internals package-private where possible. A new class goes in `internal` unless another module needs it. Other modules never import another module's `internal` package.
+- Group the base package by feature, not by layer (no `dto/`, `model/` or `service/` there). Add role-based sub-packages only inside `internal`, and only once it grows past roughly 10-15 classes.
+- **Naming:** JPA entities end in `Entity` (`LedgerAccountEntity`). DTOs end in `Dto`, both public-facing request/response types and internal ones. Value objects such as `Money` are not DTOs and keep their plain name.
 - All tables live in the `wallet` schema (`wallet.db.schema`). Flyway owns the schema; Hibernate only validates.
 - `docs/requirements.md` holds requirements; `docs/adr/` holds decisions (copy `0000-template.md`).
 

@@ -3,11 +3,11 @@ package com.sithum.wallet;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.sithum.wallet.accounts.internal.WalletProfile;
+import com.sithum.wallet.accounts.internal.WalletProfileEntity;
 import com.sithum.wallet.accounts.internal.WalletStatus;
 import com.sithum.wallet.ledger.Money;
-import com.sithum.wallet.ledger.internal.LedgerAccount;
-import com.sithum.wallet.ledger.internal.LedgerEntry;
+import com.sithum.wallet.ledger.internal.LedgerAccountEntity;
+import com.sithum.wallet.ledger.internal.LedgerEntryEntity;
 import jakarta.persistence.EntityManager;
 import java.util.List;
 import java.util.UUID;
@@ -190,20 +190,20 @@ class DataModelConstraintTests {
         UUID owner = UUID.randomUUID();
         UUID txId = UUID.randomUUID();
         UUID accountId = tx.execute(status -> {
-            LedgerAccount account = LedgerAccount.wallet("USD");
+            LedgerAccountEntity account = LedgerAccountEntity.wallet("USD");
             em.persist(account);
-            em.persist(new WalletProfile(account.getId(), owner, "USD"));
-            em.persist(new LedgerEntry(txId, account.getId(), Money.of(250, "USD")));
+            em.persist(new WalletProfileEntity(account.getId(), owner, "USD"));
+            em.persist(new LedgerEntryEntity(txId, account.getId(), Money.of(250, "USD")));
             return account.getId();
         });
 
         tx.executeWithoutResult(status -> {
-            LedgerAccount account = em.find(LedgerAccount.class, accountId);
+            LedgerAccountEntity account = em.find(LedgerAccountEntity.class, accountId);
             assertThat(account.getBalance()).isEqualTo(Money.of(0, "USD"));
-            WalletProfile profile = em.find(WalletProfile.class, accountId);
+            WalletProfileEntity profile = em.find(WalletProfileEntity.class, accountId);
             assertThat(profile.getStatus()).isEqualTo(WalletStatus.ACTIVE);
             assertThat(profile.getOwnerId()).isEqualTo(owner);
-            Long total = em.createQuery("select sum(e.amount) from LedgerEntry e where e.transactionId = :t", Long.class)
+            Long total = em.createQuery("select sum(e.amount) from LedgerEntryEntity e where e.transactionId = :t", Long.class)
                     .setParameter("t", txId).getSingleResult();
             assertThat(total).isEqualTo(250);
         });

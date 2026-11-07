@@ -7,11 +7,11 @@ import com.sithum.wallet.ledger.Money;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
-class LedgerEntityTests {
+class LedgerEntitiesTests {
 
     @Test
     void newWalletAccountIsEmptyAndTyped() {
-        LedgerAccount account = LedgerAccount.wallet("USD");
+        LedgerAccountEntity account = LedgerAccountEntity.wallet("USD");
 
         assertThat(account.getId()).isNotNull();
         assertThat(account.getType()).isEqualTo(LedgerAccountType.WALLET);
@@ -25,7 +25,7 @@ class LedgerEntityTests {
         UUID tx = UUID.randomUUID();
         UUID account = UUID.randomUUID();
 
-        LedgerEntry entry = new LedgerEntry(tx, account, Money.of(-250, "EUR"));
+        LedgerEntryEntity entry = new LedgerEntryEntity(tx, account, Money.of(-250, "EUR"));
 
         assertThat(entry.getId()).isNotNull();
         assertThat(entry.getTransactionId()).isEqualTo(tx);
@@ -38,7 +38,7 @@ class LedgerEntityTests {
         UUID id = UUID.randomUUID();
         Money zero = Money.of(0, "USD");
 
-        assertThatThrownBy(() -> new LedgerEntry(id, id, zero))
+        assertThatThrownBy(() -> new LedgerEntryEntity(id, id, zero))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 }

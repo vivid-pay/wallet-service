@@ -15,7 +15,7 @@ import org.hibernate.type.SqlTypes;
 
 @Entity
 @Table(name = "ledger_account")
-public class LedgerAccount {
+public class LedgerAccountEntity {
 
     @Id
     private UUID id;
@@ -44,11 +44,11 @@ public class LedgerAccount {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
-    protected LedgerAccount() {
+    protected LedgerAccountEntity() {
     }
 
-    public static LedgerAccount wallet(String currency) {
-        LedgerAccount account = new LedgerAccount();
+    public static LedgerAccountEntity wallet(String currency) {
+        LedgerAccountEntity account = new LedgerAccountEntity();
         account.id = UUID.randomUUID();
         account.type = LedgerAccountType.WALLET;
         account.currency = currency;

@@ -28,7 +28,7 @@ class LedgerAccountService implements LedgerAccounts {
         if (currency == null || !supportedCurrencies.contains(currency)) {
             throw new UnsupportedCurrencyException(currency);
         }
-        return repository.save(LedgerAccount.wallet(currency)).getId();
+        return repository.save(LedgerAccountEntity.wallet(currency)).getId();
     }
 
     @Override
