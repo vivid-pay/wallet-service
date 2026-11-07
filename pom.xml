@@ -27,6 +27,16 @@
         <!-- Docker Engine 29 requires API >= 1.40; Testcontainers 1.21.0 is too old for it -->
         <testcontainers.version>1.21.4</testcontainers.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <!-- SonarQube Cloud (ADR-0005). Identifiers only, no secrets: the token is the SONAR_TOKEN env var. -->
+        <sonar.host.url>https://sonarcloud.io</sonar.host.url>
+        <sonar.organization>vivid-pay</sonar.organization>
+        <sonar.projectKey>vivid-pay_wallet-service</sonar.projectKey>
+        <sonar.projectName>wallet-service</sonar.projectName>
+        <!-- Config classes and the application entry point are excluded from coverage, not from analysis. -->
+        <sonar.coverage.exclusions>**/WalletApplication.java,**/*Config.java,**/*Configuration.java,**/config/**</sonar.coverage.exclusions>
+        <!-- The JaCoCo report written by wallet-core's `verify` (VPAY-12). -->
+        <sonar.coverage.jacoco.xmlReportPaths>${project.build.directory}/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
     </properties>
 
     <dependencyManagement>
@@ -40,4 +50,16 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.sonarsource.scanner.maven</groupId>
+                    <artifactId>sonar-maven-plugin</artifactId>
+                    <version>5.1.0.4751</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
 </project>
