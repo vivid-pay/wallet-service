@@ -3,11 +3,11 @@ package com.sithum.wallet;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.sithum.wallet.accounts.WalletProfile;
-import com.sithum.wallet.accounts.WalletStatus;
-import com.sithum.wallet.ledger.LedgerAccount;
-import com.sithum.wallet.ledger.LedgerEntry;
+import com.sithum.wallet.accounts.internal.WalletProfile;
+import com.sithum.wallet.accounts.internal.WalletStatus;
 import com.sithum.wallet.ledger.Money;
+import com.sithum.wallet.ledger.internal.LedgerAccount;
+import com.sithum.wallet.ledger.internal.LedgerEntry;
 import jakarta.persistence.EntityManager;
 import java.util.List;
 import java.util.UUID;

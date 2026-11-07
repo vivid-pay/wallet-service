@@ -1,4 +1,4 @@
-package com.sithum.wallet.accounts;
+package com.sithum.wallet.accounts.internal;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

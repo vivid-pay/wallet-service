@@ -1,4 +1,4 @@
-package com.sithum.wallet.ledger;
+package com.sithum.wallet.ledger.internal;
 
 public enum LedgerAccountType {
     WALLET,
