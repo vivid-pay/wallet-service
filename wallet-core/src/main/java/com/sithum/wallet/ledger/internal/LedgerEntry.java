@@ -1,9 +1,10 @@
-package com.sithum.wallet.ledger;
+package com.sithum.wallet.ledger.internal;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import com.sithum.wallet.ledger.Money;
 import java.time.Instant;
 import java.util.UUID;
 import org.hibernate.annotations.Immutable;

@@ -1,6 +1,5 @@
 package com.sithum.wallet.ledger.internal;
 
-import com.sithum.wallet.ledger.LedgerAccount;
 import com.sithum.wallet.ledger.LedgerAccountNotFoundException;
 import com.sithum.wallet.ledger.LedgerAccounts;
 import com.sithum.wallet.ledger.Money;

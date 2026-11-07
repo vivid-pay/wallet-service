@@ -88,7 +88,7 @@ Example (Alice tops up 100, then sends 30 to Bob):
   `EXTERNAL_FUNDING` and `FEES` in USD, EUR and LKR. Adding a currency is a new migration.
 - **Public API (VPAY-25).** `ledger.LedgerAccounts` is the interface other modules use to open a WALLET
   account (`openWalletAccount(currency)`, balance 0) and read a balance as `Money` (`balanceOf(id)`).
-  Its implementation and repository live in `ledger.internal`. Supported currencies come from
+  Its implementation, repository and JPA entities live in `ledger.internal` (and `accounts` entities in `accounts.internal`), so no other module can reach them. Supported currencies come from
   `wallet.ledger.supported-currencies` (default `USD,EUR,LKR`, matching the seeded system accounts);
   anything else, including malformed codes, throws `UnsupportedCurrencyException`. A missing account throws
   `LedgerAccountNotFoundException`. The HTTP mapping (400/404) is added in the error handler when a REST
