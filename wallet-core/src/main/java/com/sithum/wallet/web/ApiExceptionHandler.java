@@ -1,5 +1,8 @@
 package com.sithum.wallet.web;
 
+import com.sithum.wallet.accounts.DuplicateWalletException;
+import com.sithum.wallet.accounts.UnauthenticatedException;
+import com.sithum.wallet.ledger.UnsupportedCurrencyException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.net.URI;
 import java.util.List;
@@ -46,6 +49,30 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
         problem.setTitle("Validation failed");
         problem.setProperty("errors", errors);
         return handleExceptionInternal(ex, problem, headers, status, request);
+    }
+
+    @ExceptionHandler(UnsupportedCurrencyException.class)
+    public ResponseEntity<Object> handleUnsupportedCurrency(UnsupportedCurrencyException ex, WebRequest request) {
+        return problem(HttpStatus.BAD_REQUEST, "Unsupported currency",
+                "Currency must be an uppercase ISO 4217 code from the supported list", ex, request);
+    }
+
+    @ExceptionHandler(DuplicateWalletException.class)
+    public ResponseEntity<Object> handleDuplicateWallet(DuplicateWalletException ex, WebRequest request) {
+        return problem(HttpStatus.CONFLICT, "Wallet already exists",
+                "You already have a wallet in this currency", ex, request);
+    }
+
+    @ExceptionHandler(UnauthenticatedException.class)
+    public ResponseEntity<Object> handleUnauthenticated(UnauthenticatedException ex, WebRequest request) {
+        return problem(HttpStatus.UNAUTHORIZED, "Unauthenticated", ex.getMessage(), ex, request);
+    }
+
+    private ResponseEntity<Object> problem(HttpStatus status, String title, String detail, Exception ex,
+            WebRequest request) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(status, detail);
+        problem.setTitle(title);
+        return handleExceptionInternal(ex, problem, new HttpHeaders(), status, request);
     }
 
     @ExceptionHandler(Exception.class)
