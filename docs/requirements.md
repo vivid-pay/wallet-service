@@ -40,8 +40,9 @@ Notifications, statements (PDF/CSV), FX conversion, payment requests, scheduled 
 ## Decisions made
 - Balance model and top-up/fee bookkeeping: entries are the truth, stored balance is a
   cached projection, system accounts are the counterparty ([ADR-0002](adr/0002-ledger-and-balance-model.md)).
-- Money representation: integer minor units plus an ISO 4217 code ([ADR-0003](adr/0003-money-representation.md)).
+- Money representation: integer minor units plus an ISO 4217 code ([ADR-0003](adr/0003-money-representation.md)); API conventions in [api-money-conventions.md](api-money-conventions.md).
+- Currencies at launch: USD, EUR and LKR, a configured list (`wallet.ledger.supported-currencies`) that must match
+  the currencies seeded for system accounts; adding one needs the config and a Flyway migration.
 
 ## Open questions
-- Which currencies are supported at launch? (a configured list; decided in the "create a wallet" story)
 - Which module owns which table (`ledger` vs `accounts`)? (decided in the wallet data-model story)

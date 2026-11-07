@@ -1,6 +1,8 @@
 wallet:
   db:
     schema: ${DB_SCHEMA:wallet}   # single source of truth for the schema name
+  ledger:
+    supported-currencies: ${SUPPORTED_CURRENCIES:USD,EUR,LKR}   # must match the currencies seeded for system accounts
 
 spring:
   application:
