@@ -70,7 +70,8 @@ class LedgerAccountsIntegrationTests {
         for (String bad : new String[] {"JPY", "usd", "US", "USDX", "U1D", "", " ", null}) {
             assertThatThrownBy(() -> ledger.openWalletAccount(bad))
                     .as("currency %s", bad)
-                    .isInstanceOf(UnsupportedCurrencyException.class);
+                    .isInstanceOf(UnsupportedCurrencyException.class)
+                    .extracting(e -> ((UnsupportedCurrencyException) e).getCurrency()).isEqualTo(bad);
         }
     }
 
@@ -86,7 +87,8 @@ class LedgerAccountsIntegrationTests {
         UUID missing = UUID.randomUUID();
         assertThatThrownBy(() -> ledger.balanceOf(missing))
                 .isInstanceOf(LedgerAccountNotFoundException.class)
-                .hasMessageContaining(missing.toString());
+                .hasMessageContaining(missing.toString())
+                .extracting(e -> ((LedgerAccountNotFoundException) e).getAccountId()).isEqualTo(missing);
     }
 
     @Test
