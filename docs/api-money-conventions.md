@@ -1,6 +1,6 @@
 # API money conventions
 
-Follows [ADR-0003](adr/0003-money-representation.md). Every client of the wallet API must read this.
+Follows [ADR-0003](https://github.com/vivid-pay/platform/blob/develop/docs/adr/0003-money-representation.md). Every client of the wallet API must read this.
 
 - **Amounts are integers in minor units.** `balance: 1234` with `currency: "USD"` is $12.34. The API
   never returns decimals, strings or floating point for money.

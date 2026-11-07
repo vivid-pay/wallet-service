@@ -11,8 +11,7 @@ Part of **Vivid Pay**. The vision, roadmap and working agreements are in the [pl
 
 ## Layout
 - `wallet-core/` – the deployable core of `wallet-service`, organised as modules: `accounts`, `ledger`, `transfers`, `events`
-- `docs/requirements.md` – functional and non-functional requirements
-- `docs/adr/` – architecture decision records
+- `docs/` – service-level docs and ADRs, indexed in [docs/README.md](docs/README.md); requirements and system-wide ADRs are in the [platform](https://github.com/vivid-pay/platform/tree/develop/docs) repo
 
 ## Run locally
 ```bash
