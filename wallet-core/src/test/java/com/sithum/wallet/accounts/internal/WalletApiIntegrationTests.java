@@ -5,6 +5,7 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.endsWith;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -91,6 +92,78 @@ class WalletApiIntegrationTests {
                             "select owner_id from wallet_profile where ledger_account_id = ?::uuid",
                             UUID.class, id)).isEqualTo(owner);
                 });
+    }
+
+    private MockHttpServletRequestBuilder fetch(UUID owner, String id) {
+        MockHttpServletRequestBuilder request = get("/api/v1/wallets/" + id);
+        return owner == null ? request : request.header("X-User-Id", owner.toString());
+    }
+
+    private String createWallet(UUID owner, String currency) throws Exception {
+        String json = mvc.perform(create(owner, body(currency))).andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        return com.jayway.jsonpath.JsonPath.read(json, "$.id");
+    }
+
+    @Test
+    void getReturnsTheOwnersWalletWithItsBalanceInMinorUnits() throws Exception {
+        UUID owner = UUID.randomUUID();
+        String id = createWallet(owner, "LKR");
+        jdbc.update("update ledger_account set balance = 123456 where id = ?::uuid", id);
+
+        mvc.perform(fetch(owner, id))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(id))
+                .andExpect(jsonPath("$.currency").value("LKR"))
+                .andExpect(jsonPath("$.balance").value(123456))
+                .andExpect(jsonPath("$.status").value("ACTIVE"))
+                .andExpect(content().string(containsString("\"balance\":123456,")));
+    }
+
+    @Test
+    void getOfAMissingWalletIs404ProblemJson() throws Exception {
+        mvc.perform(fetch(UUID.randomUUID(), UUID.randomUUID().toString()))
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.status").value(404))
+                .andExpect(jsonPath("$.correlationId").isNotEmpty());
+    }
+
+    @Test
+    void getOfSomeoneElsesWalletIsIndistinguishableFromMissing() throws Exception {
+        String id = createWallet(UUID.randomUUID(), "USD");
+        String missing = UUID.randomUUID().toString();
+
+        String notYours = mvc.perform(fetch(UUID.randomUUID(), id))
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+                .andReturn().getResponse().getContentAsString();
+        String doesNotExist = mvc.perform(fetch(UUID.randomUUID(), missing)).andReturn().getResponse()
+                .getContentAsString();
+
+        assertThat(com.jayway.jsonpath.JsonPath.<String>read(notYours, "$.detail"))
+                .isEqualTo(com.jayway.jsonpath.JsonPath.<String>read(doesNotExist, "$.detail"));
+        assertThat(com.jayway.jsonpath.JsonPath.<String>read(notYours, "$.title"))
+                .isEqualTo(com.jayway.jsonpath.JsonPath.<String>read(doesNotExist, "$.title"));
+        assertThat(com.jayway.jsonpath.JsonPath.<Object>read(notYours, "$.detail").toString()).doesNotContain(id);
+        assertThat(notYours).doesNotContain("owner");
+    }
+
+    @Test
+    void getWithAMalformedIdIs400ProblemJson() throws Exception {
+        for (String bad : new String[] {"not-a-uuid", "123", "00000000-0000-0000-0000-00000000000g"}) {
+            mvc.perform(fetch(UUID.randomUUID(), bad))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+                    .andExpect(jsonPath("$.status").value(400));
+        }
+    }
+
+    @Test
+    void getWithoutUserIdIs401() throws Exception {
+        mvc.perform(fetch(null, UUID.randomUUID().toString()))
+                .andExpect(status().isUnauthorized())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON));
     }
 
     @Test

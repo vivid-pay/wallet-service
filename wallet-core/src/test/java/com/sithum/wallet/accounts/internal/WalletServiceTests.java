@@ -9,10 +9,12 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.sithum.wallet.accounts.DuplicateWalletException;
+import com.sithum.wallet.accounts.WalletNotFoundException;
 import com.sithum.wallet.ledger.LedgerAccounts;
 import com.sithum.wallet.ledger.Money;
 import com.sithum.wallet.ledger.UnsupportedCurrencyException;
 import java.sql.SQLException;
+import java.util.Optional;
 import java.util.UUID;
 import org.hibernate.exception.ConstraintViolationException;
 import org.junit.jupiter.api.Test;
@@ -75,6 +77,36 @@ class WalletServiceTests {
 
         assertThatThrownBy(() -> service.create(owner, "JPY")).isInstanceOf(UnsupportedCurrencyException.class);
         verify(profiles, never()).saveAndFlush(any());
+    }
+
+    @Test
+    void getReturnsTheOwnersWalletWithBalanceFromTheLedger() {
+        UUID accountId = UUID.randomUUID();
+        when(profiles.findById(accountId)).thenReturn(Optional.of(new WalletProfileEntity(accountId, owner, "LKR")));
+        when(ledger.balanceOf(accountId)).thenReturn(Money.of(12_345, "LKR"));
+
+        WalletDto wallet = service.get(owner, accountId);
+
+        assertThat(wallet).isEqualTo(new WalletDto(accountId, "LKR", 12_345, WalletStatus.ACTIVE));
+    }
+
+    @Test
+    void getOfAMissingWalletIsNotFoundAndDoesNotTouchTheLedger() {
+        UUID id = UUID.randomUUID();
+        when(profiles.findById(id)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.get(owner, id)).isInstanceOf(WalletNotFoundException.class);
+        verify(ledger, never()).balanceOf(any());
+    }
+
+    @Test
+    void getOfSomeoneElsesWalletIsNotFoundAndDoesNotTouchTheLedger() {
+        UUID accountId = UUID.randomUUID();
+        when(profiles.findById(accountId))
+                .thenReturn(Optional.of(new WalletProfileEntity(accountId, UUID.randomUUID(), "USD")));
+
+        assertThatThrownBy(() -> service.get(owner, accountId)).isInstanceOf(WalletNotFoundException.class);
+        verify(ledger, never()).balanceOf(any());
     }
 
     private static DataIntegrityViolationException violation(String constraint) {

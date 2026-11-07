@@ -2,6 +2,7 @@ package com.sithum.wallet.web;
 
 import com.sithum.wallet.accounts.DuplicateWalletException;
 import com.sithum.wallet.accounts.UnauthenticatedException;
+import com.sithum.wallet.accounts.WalletNotFoundException;
 import com.sithum.wallet.ledger.UnsupportedCurrencyException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.net.URI;
@@ -61,6 +62,11 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
     public ResponseEntity<Object> handleDuplicateWallet(DuplicateWalletException ex, WebRequest request) {
         return problem(HttpStatus.CONFLICT, "Wallet already exists",
                 "You already have a wallet in this currency", ex, request);
+    }
+
+    @ExceptionHandler(WalletNotFoundException.class)
+    public ResponseEntity<Object> handleWalletNotFound(WalletNotFoundException ex, WebRequest request) {
+        return problem(HttpStatus.NOT_FOUND, "Wallet not found", "No wallet found with this id", ex, request);
     }
 
     @ExceptionHandler(UnauthenticatedException.class)
