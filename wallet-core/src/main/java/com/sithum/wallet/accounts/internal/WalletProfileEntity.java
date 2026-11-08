@@ -70,4 +70,14 @@ public class WalletProfileEntity {
     public WalletStatus getStatus() {
         return status;
     }
+
+    /** Sets the status and returns {@code true}; returns {@code false} and changes nothing if it is already set. */
+    boolean changeStatus(WalletStatus newStatus) {
+        if (status == newStatus) {
+            return false;
+        }
+        this.status = newStatus;
+        this.updatedAt = Instant.now();
+        return true;
+    }
 }
