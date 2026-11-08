@@ -264,4 +264,116 @@ class WalletApiIntegrationTests {
                 .andExpect(status().isUnauthorized());
         assertThat(walletAccounts()).isEqualTo(before);
     }
+
+    private MockHttpServletRequestBuilder list(UUID owner, String query) {
+        MockHttpServletRequestBuilder request = get("/api/v1/wallets" + query);
+        return owner == null ? request : request.header("X-User-Id", owner.toString());
+    }
+
+    @Test
+    void listIsEmptyWithStatus200ForAnOwnerWithNoWallets() throws Exception {
+        mvc.perform(list(UUID.randomUUID(), ""))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").isEmpty())
+                .andExpect(jsonPath("$.page").value(0))
+                .andExpect(jsonPath("$.size").value(20))
+                .andExpect(jsonPath("$.totalElements").value(0))
+                .andExpect(jsonPath("$.totalPages").value(0));
+    }
+
+    @Test
+    void listNeverShowsAnotherUsersWallets() throws Exception {
+        UUID alice = UUID.randomUUID();
+        UUID bob = UUID.randomUUID();
+        String aliceUsd = createWallet(alice, "USD");
+        String aliceEur = createWallet(alice, "EUR");
+        String bobUsd = createWallet(bob, "USD");
+
+        mvc.perform(list(alice, "?size=100"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(2))
+                .andExpect(jsonPath("$.content[*].id", org.hamcrest.Matchers.containsInAnyOrder(aliceUsd, aliceEur)))
+                .andExpect(content().string(org.hamcrest.Matchers.not(containsString(bobUsd))));
+        mvc.perform(list(bob, "?size=100"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.content[0].id").value(bobUsd))
+                .andExpect(content().string(org.hamcrest.Matchers.not(containsString(aliceUsd))))
+                .andExpect(content().string(org.hamcrest.Matchers.not(containsString(aliceEur))));
+    }
+
+    @Test
+    void listShowsBalancesInMinorUnitsOrderedByCreationTimeThenId() throws Exception {
+        UUID owner = UUID.randomUUID();
+        String usd = createWallet(owner, "USD");
+        String eur = createWallet(owner, "EUR");
+        String lkr = createWallet(owner, "LKR");
+        jdbc.update("update ledger_account set balance = 5000 where id = ?::uuid", usd);
+        // usd is newest; eur and lkr share a timestamp, so the id breaks the tie
+        jdbc.update("update wallet_profile set created_at = '2026-01-02T00:00:00Z' where ledger_account_id = ?::uuid",
+                usd);
+        jdbc.update("update wallet_profile set created_at = '2026-01-01T00:00:00Z' "
+                + "where ledger_account_id in (?::uuid, ?::uuid)", eur, lkr);
+        List<String> tied = new ArrayList<>(List.of(eur, lkr));
+        tied.sort(String::compareTo);
+
+        mvc.perform(list(owner, ""))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].id").value(tied.get(0)))
+                .andExpect(jsonPath("$.content[1].id").value(tied.get(1)))
+                .andExpect(jsonPath("$.content[2].id").value(usd))
+                .andExpect(jsonPath("$.content[2].balance").value(5000))
+                .andExpect(jsonPath("$.content[2].currency").value("USD"))
+                .andExpect(jsonPath("$.content[2].status").value("ACTIVE"));
+    }
+
+    @Test
+    void listIsPaginated() throws Exception {
+        UUID owner = UUID.randomUUID();
+        createWallet(owner, "USD");
+        createWallet(owner, "EUR");
+        createWallet(owner, "LKR");
+
+        mvc.perform(list(owner, "?page=1&size=2"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.length()").value(1))
+                .andExpect(jsonPath("$.page").value(1))
+                .andExpect(jsonPath("$.size").value(2))
+                .andExpect(jsonPath("$.totalElements").value(3))
+                .andExpect(jsonPath("$.totalPages").value(2));
+        mvc.perform(list(owner, "?page=5&size=2"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").isEmpty());
+    }
+
+    @Test
+    void listAcceptsTheMaximumPageSizeAndRejectsOneAbove() throws Exception {
+        UUID owner = UUID.randomUUID();
+        mvc.perform(list(owner, "?size=100"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.size").value(100));
+        mvc.perform(list(owner, "?size=101"))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON));
+    }
+
+    @Test
+    void listWithInvalidPageOrSizeIs400ProblemJson() throws Exception {
+        UUID owner = UUID.randomUUID();
+        for (String bad : new String[] {"?page=-1", "?size=0", "?size=-5", "?page=abc", "?size=abc", "?page=1.5",
+                "?page=99999999999"}) {
+            mvc.perform(list(owner, bad))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+                    .andExpect(jsonPath("$.status").value(400))
+                    .andExpect(jsonPath("$.correlationId").isNotEmpty());
+        }
+    }
+
+    @Test
+    void listWithoutUserIdIs401ProblemJson() throws Exception {
+        mvc.perform(list(null, ""))
+                .andExpect(status().isUnauthorized())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON));
+    }
 }

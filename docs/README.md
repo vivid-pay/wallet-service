@@ -12,6 +12,7 @@ every repo and the global numbering rule.
 | [adr/0005](adr/0005-sonarqube-quality-gate.md) | SonarQube Cloud quality gate on new code |
 | [adr/0006](adr/0006-temporary-owner-identity-header.md) | Temporary caller identity from the `X-User-Id` header |
 | [api-money-conventions.md](api-money-conventions.md) | How the API represents money: minor units and the exponent per currency |
+| [api-pagination.md](api-pagination.md) | `page`/`size` parameters, the maximum page size and the page response shape |
 
 ## In the platform repo
 | Doc | What it is |

@@ -5,6 +5,9 @@ import com.sithum.wallet.accounts.WalletNotFoundException;
 import com.sithum.wallet.ledger.LedgerAccounts;
 import com.sithum.wallet.ledger.Money;
 import java.util.UUID;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
@@ -58,6 +61,21 @@ class WalletService {
         Money balance = ledger.balanceOf(profile.getLedgerAccountId());
         return new WalletDto(profile.getLedgerAccountId(), balance.currency(), balance.amount(),
                 profile.getStatus());
+    }
+
+    /**
+     * Lists the caller's wallets, oldest first with the wallet id as a stable tie-break, one page at a time.
+     * Balances are read per wallet through the ledger's public API, so the cost is bounded by the page size.
+     */
+    @Transactional(readOnly = true)
+    PageDto<WalletDto> list(UUID ownerId, int page, int size) {
+        PageRequest request = PageRequest.of(page, size, Sort.by("createdAt", "ledgerAccountId"));
+        Page<WalletDto> wallets = profiles.findByOwnerId(ownerId, request).map(profile -> {
+            Money balance = ledger.balanceOf(profile.getLedgerAccountId());
+            return new WalletDto(profile.getLedgerAccountId(), balance.currency(), balance.amount(),
+                    profile.getStatus());
+        });
+        return PageDto.of(wallets);
     }
 
     private static boolean violatesOwnerCurrencyConstraint(Throwable e) {

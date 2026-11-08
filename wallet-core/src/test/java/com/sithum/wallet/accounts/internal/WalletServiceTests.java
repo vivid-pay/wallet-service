@@ -14,12 +14,17 @@ import com.sithum.wallet.ledger.LedgerAccounts;
 import com.sithum.wallet.ledger.Money;
 import com.sithum.wallet.ledger.UnsupportedCurrencyException;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.hibernate.exception.ConstraintViolationException;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
 class WalletServiceTests {
 
@@ -106,6 +111,40 @@ class WalletServiceTests {
                 .thenReturn(Optional.of(new WalletProfileEntity(accountId, UUID.randomUUID(), "USD")));
 
         assertThatThrownBy(() -> service.get(owner, accountId)).isInstanceOf(WalletNotFoundException.class);
+        verify(ledger, never()).balanceOf(any());
+    }
+
+    @Test
+    void listReturnsTheOwnersWalletsWithBalancesAndPageMetadata() {
+        UUID a = UUID.randomUUID();
+        UUID b = UUID.randomUUID();
+        ArgumentCaptor<Pageable> pageable = ArgumentCaptor.forClass(Pageable.class);
+        when(profiles.findByOwnerId(any(), pageable.capture())).thenReturn(new PageImpl<>(
+                List.of(new WalletProfileEntity(a, owner, "LKR"), new WalletProfileEntity(b, owner, "USD")),
+                org.springframework.data.domain.PageRequest.of(1, 2), 5));
+        when(ledger.balanceOf(a)).thenReturn(Money.of(100, "LKR"));
+        when(ledger.balanceOf(b)).thenReturn(Money.of(0, "USD"));
+
+        PageDto<WalletDto> page = service.list(owner, 1, 2);
+
+        assertThat(page.content()).containsExactly(new WalletDto(a, "LKR", 100, WalletStatus.ACTIVE),
+                new WalletDto(b, "USD", 0, WalletStatus.ACTIVE));
+        assertThat(page.page()).isEqualTo(1);
+        assertThat(page.size()).isEqualTo(2);
+        assertThat(page.totalElements()).isEqualTo(5);
+        assertThat(page.totalPages()).isEqualTo(3);
+        assertThat(pageable.getValue().getSort()).isEqualTo(Sort.by("createdAt", "ledgerAccountId"));
+        verify(profiles).findByOwnerId(owner, pageable.getValue());
+    }
+
+    @Test
+    void listForAnOwnerWithNoWalletsIsEmpty() {
+        when(profiles.findByOwnerId(any(), any())).thenReturn(Page.empty());
+
+        PageDto<WalletDto> page = service.list(owner, 0, 20);
+
+        assertThat(page.content()).isEmpty();
+        assertThat(page.totalElements()).isZero();
         verify(ledger, never()).balanceOf(any());
     }
 
