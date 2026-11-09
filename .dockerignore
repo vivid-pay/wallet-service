@@ -1,0 +1,21 @@
+# Build output
+**/target/
+# VCS and IDE
+.git
+.gitignore
+.idea/
+.vscode/
+*.iml
+.DS_Store
+# Local config and secrets
+.env
+.env.*
+**/application-local*.yml
+**/application-local*.properties
+*.log
+# Not needed to build the image
+.claude/
+.github/
+docs/
+Dockerfile
+.dockerignore
