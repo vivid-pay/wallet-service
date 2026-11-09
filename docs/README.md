@@ -11,6 +11,7 @@ every repo and the global numbering rule.
 | [adr/0002](adr/0002-ledger-and-balance-model.md) | Double-entry ledger with a stored balance projection (and table ownership follow-ups) |
 | [adr/0005](adr/0005-sonarqube-quality-gate.md) | SonarQube Cloud quality gate on new code |
 | [adr/0006](adr/0006-temporary-owner-identity-header.md) | Temporary caller identity from the `X-User-Id` header |
+| [adr/0007](adr/0007-private-dev-environment-before-security.md) | Dev environment stays private (X-User-Id, Swagger UI) until the Security epic lands |
 | [api-money-conventions.md](api-money-conventions.md) | How the API represents money: minor units and the exponent per currency |
 | [api-admin-wallets.md](api-admin-wallets.md) | Freeze/unfreeze endpoint (unprotected until VPAY-7), status history and the `Wallets.isActive` rule |
 | [api-pagination.md](api-pagination.md) | `page`/`size` parameters, the maximum page size and the page response shape |
