@@ -30,7 +30,8 @@ class WalletServiceTests {
 
     private final LedgerAccounts ledger = mock(LedgerAccounts.class);
     private final WalletProfileRepository profiles = mock(WalletProfileRepository.class);
-    private final WalletService service = new WalletService(ledger, profiles);
+    private final WalletStatusHistoryRepository history = mock(WalletStatusHistoryRepository.class);
+    private final WalletService service = new WalletService(ledger, profiles, history);
     private final UUID owner = UUID.randomUUID();
 
     @Test
@@ -151,5 +152,53 @@ class WalletServiceTests {
     private static DataIntegrityViolationException violation(String constraint) {
         return new DataIntegrityViolationException("violation",
                 new ConstraintViolationException("violation", new SQLException(), constraint));
+    }
+
+    @Test
+    void changeStatusFreezesAndRecordsTheActorAndAStrippedReason() {
+        UUID accountId = UUID.randomUUID();
+        UUID actor = UUID.randomUUID();
+        when(profiles.findForUpdate(accountId))
+                .thenReturn(Optional.of(new WalletProfileEntity(accountId, owner, "USD")));
+        when(ledger.balanceOf(accountId)).thenReturn(Money.of(5, "USD"));
+
+        WalletDto wallet = service.changeStatus(actor, accountId, WalletStatus.FROZEN, "  fraud  ");
+
+        assertThat(wallet).isEqualTo(new WalletDto(accountId, "USD", 5, WalletStatus.FROZEN));
+        verify(history).save(any(WalletStatusHistoryEntity.class));
+    }
+
+    @Test
+    void changeStatusToTheCurrentStatusWritesNoHistory() {
+        UUID accountId = UUID.randomUUID();
+        when(profiles.findForUpdate(accountId))
+                .thenReturn(Optional.of(new WalletProfileEntity(accountId, owner, "USD")));
+        when(ledger.balanceOf(accountId)).thenReturn(Money.of(0, "USD"));
+
+        WalletDto wallet = service.changeStatus(owner, accountId, WalletStatus.ACTIVE, "noop");
+
+        assertThat(wallet.status()).isEqualTo(WalletStatus.ACTIVE);
+        verify(history, never()).save(any());
+    }
+
+    @Test
+    void changeStatusOfAMissingWalletThrowsNotFound() {
+        UUID accountId = UUID.randomUUID();
+        when(profiles.findForUpdate(accountId)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.changeStatus(owner, accountId, WalletStatus.FROZEN, "x"))
+                .isInstanceOf(WalletNotFoundException.class);
+        verify(history, never()).save(any());
+    }
+
+    @Test
+    void isActiveIsFalseOnlyForAFrozenWallet() {
+        UUID accountId = UUID.randomUUID();
+        WalletProfileEntity profile = new WalletProfileEntity(accountId, owner, "USD");
+        when(profiles.findById(accountId)).thenReturn(Optional.of(profile));
+        assertThat(service.isActive(accountId)).isTrue();
+
+        profile.changeStatus(WalletStatus.FROZEN);
+        assertThat(service.isActive(accountId)).isFalse();
     }
 }

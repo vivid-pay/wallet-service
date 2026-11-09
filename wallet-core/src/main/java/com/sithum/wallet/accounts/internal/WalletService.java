@@ -2,6 +2,7 @@ package com.sithum.wallet.accounts.internal;
 
 import com.sithum.wallet.accounts.DuplicateWalletException;
 import com.sithum.wallet.accounts.WalletNotFoundException;
+import com.sithum.wallet.accounts.Wallets;
 import com.sithum.wallet.ledger.LedgerAccounts;
 import com.sithum.wallet.ledger.Money;
 import java.util.UUID;
@@ -14,16 +15,18 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-class WalletService {
+class WalletService implements Wallets {
 
     static final String OWNER_CURRENCY_CONSTRAINT = "uq_wallet_profile_owner_currency";
 
     private final LedgerAccounts ledger;
     private final WalletProfileRepository profiles;
+    private final WalletStatusHistoryRepository history;
 
-    WalletService(LedgerAccounts ledger, WalletProfileRepository profiles) {
+    WalletService(LedgerAccounts ledger, WalletProfileRepository profiles, WalletStatusHistoryRepository history) {
         this.ledger = ledger;
         this.profiles = profiles;
+        this.history = history;
     }
 
     /**
@@ -76,6 +79,32 @@ class WalletService {
                     profile.getStatus());
         });
         return PageDto.of(wallets);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean isActive(UUID walletId) {
+        return profiles.findById(walletId)
+                .orElseThrow(() -> new WalletNotFoundException(walletId))
+                .getStatus() == WalletStatus.ACTIVE;
+    }
+
+    /**
+     * Sets a wallet's status (operator action, any owner's wallet) and records who, when and why in the
+     * append-only history. Asking for the status the wallet already has is a no-op: nothing is written.
+     * The profile row is locked so concurrent changes are applied one after the other.
+     */
+    @Transactional
+    WalletDto changeStatus(UUID actorId, UUID walletId, WalletStatus newStatus, String reason) {
+        WalletProfileEntity profile = profiles.findForUpdate(walletId)
+                .orElseThrow(() -> new WalletNotFoundException(walletId));
+        WalletStatus previous = profile.getStatus();
+        if (profile.changeStatus(newStatus)) {
+            history.save(new WalletStatusHistoryEntity(walletId, previous, newStatus, actorId, reason.strip()));
+        }
+        Money balance = ledger.balanceOf(profile.getLedgerAccountId());
+        return new WalletDto(profile.getLedgerAccountId(), balance.currency(), balance.amount(),
+                profile.getStatus());
     }
 
     private static boolean violatesOwnerCurrencyConstraint(Throwable e) {

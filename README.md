@@ -19,6 +19,10 @@ docker compose -f ../base-components/docker-compose.yml up -d postgres
 mvn -pl wallet-core spring-boot:run
 ```
 
+## Admin endpoints
+`/api/v1/admin/**` (freeze/unfreeze a wallet, see [docs/api-admin-wallets.md](docs/api-admin-wallets.md)) is **not
+protected** until the Security epic (VPAY-7). Use it only locally and in tests.
+
 ## Test
 ```bash
 mvn verify   # needs Docker running (Testcontainers)
