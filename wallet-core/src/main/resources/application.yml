@@ -8,9 +8,11 @@ spring:
   application:
     name: wallet-service
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5432/wallet-service}
-    username: ${DB_USER:postgres}
-    password: ${DB_PASSWORD:password}
+    # No defaults on purpose: a deployed instance must fail at startup if any of these is missing,
+    # never fall back to a local credential. Local values live in application-local.yml (profile `local`).
+    url: ${DB_URL}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
     hikari:
       schema: ${wallet.db.schema}   # search_path for every connection, so queries never fall back to public
   jpa:

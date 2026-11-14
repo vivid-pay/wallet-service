@@ -16,8 +16,10 @@ Part of **Vivid Pay**. The vision, roadmap and working agreements are in the [pl
 ## Run locally
 ```bash
 docker compose -f ../base-components/docker-compose.yml up -d postgres
-mvn -pl wallet-core spring-boot:run
+mvn -pl wallet-core spring-boot:run -Dspring-boot.run.profiles=local
 ```
+The `local` profile (`application-local.yml`) holds the base-components Postgres connection. Without it, or without
+`DB_URL`, `DB_USER` and `DB_PASSWORD` in the environment, the service refuses to start.
 
 ## Container image
 Build (no local JDK needed, only Docker):
@@ -34,8 +36,9 @@ docker run --rm -p 8080:8080 \
   wallet-service:local
 curl localhost:8080/actuator/health   # {"status":"UP",...}
 ```
-`DB_URL`, `DB_USER`, `DB_PASSWORD`, `DB_SCHEMA` and `SUPPORTED_CURRENCIES` are read from the environment (defaults in
-`wallet-core/src/main/resources/application.yml` are for local development only). The container runs as a non-root user
+`DB_URL`, `DB_USER` and `DB_PASSWORD` are required and have no defaults: the service fails at startup if one is missing.
+`DB_SCHEMA` and `SUPPORTED_CURRENCIES` are optional (defaults in `wallet-core/src/main/resources/application.yml`).
+The `local` profile is not in the image (see `.dockerignore`) and is never active there. The container runs as a non-root user
 (uid 10001). `host.docker.internal` reaches Postgres on the host from Docker Desktop; on Linux add
 `--add-host=host.docker.internal:host-gateway`.
 

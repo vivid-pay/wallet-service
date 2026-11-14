@@ -1,0 +1,9 @@
+# Local development only (Spring profile `local`): the Postgres from the sibling base-components repo.
+# These are throwaway local values, not secrets. The profile is never active in the container image
+# (the file is excluded by .dockerignore and no profile is set), so deployed instances must supply
+# DB_URL, DB_USER and DB_PASSWORD from the environment.
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/wallet-service
+    username: postgres
+    password: password
