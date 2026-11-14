@@ -9,9 +9,9 @@ Work is tracked in Jira project **VPAY** (https://sithumkaushitha.atlassian.net)
 ```bash
 mvn verify                          # full build + all tests (needs Docker running: Testcontainers)
 mvn -pl wallet-core test -Dtest=ModularityTests   # fast check of module boundaries
-mvn -pl wallet-core spring-boot:run # run locally on :8080
+mvn -pl wallet-core spring-boot:run -Dspring-boot.run.profiles=local # run locally on :8080
 ```
-Local database: start Postgres from the sibling repo (`../base-components`, `docker compose up -d postgres`), then create the database once. Default connection is in `wallet-core/src/main/resources/application.yml`; local credentials are not secrets.
+Local database: start Postgres from the sibling repo (`../base-components`, `docker compose up -d postgres`), then create the database once. The `local` profile (`application-local.yml`) holds the local connection; outside it `DB_URL`, `DB_USER` and `DB_PASSWORD` are required from the environment and have no defaults. Local credentials are not secrets.
 
 ## Layout
 - `wallet-core/` is the only Maven module and the deployable. Its packages under `com.sithum.wallet` are Spring Modulith modules: `accounts`, `ledger`, `transfers`, `events`.
