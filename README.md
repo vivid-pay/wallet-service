@@ -15,10 +15,10 @@ Part of **Vivid Pay**. The vision, roadmap and working agreements are in the [pl
 
 ## Run locally
 ```bash
-docker compose -f ../base-components/docker-compose.yml up -d postgres
+docker compose -f ../third-party-components/docker-compose.yml up -d postgres
 mvn -pl wallet-core spring-boot:run -Dspring-boot.run.profiles=local
 ```
-The `local` profile (`application-local.yml`) holds the base-components Postgres connection. Without it, or without
+The `local` profile (`application-local.yml`) holds the third-party-components Postgres connection. Without it, or without
 `DB_URL`, `DB_USER` and `DB_PASSWORD` in the environment, the service refuses to start.
 
 ## Container image
@@ -26,7 +26,7 @@ Build (no local JDK needed, only Docker):
 ```bash
 docker build -t wallet-service:local .
 ```
-Run against the base-components Postgres (see "Run locally" to start it and create the `wallet-service` database).
+Run against the third-party-components Postgres (see "Run locally" to start it and create the `wallet-service` database).
 All configuration is passed as environment variables; none is baked into the image:
 ```bash
 docker run --rm -p 8080:8080 \
